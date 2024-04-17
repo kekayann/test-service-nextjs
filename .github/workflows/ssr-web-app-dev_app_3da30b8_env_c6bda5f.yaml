@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_c5267734-e5ea-4fa4-905d-a7f24c9d0332
+    types: pipeline_89445272-57db-4754-9077-f255f5a9bf4d
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -153,7 +153,10 @@ jobs:
       - name: 'Run :: Initialize AWS Amplify'
         run: |2-
 
+              echo "Setting Amplify Hosting Region"
               aws configure set amplify.hostingRegion ${{ env.region }}
+
+              echo "Initializing the Amplify App"
               aws amplify init --app iwiick --amplifyAdminRoleArn ${{ env.roleARN }}
               
       - name: 'Run :: Publish to AWS Amplify'
