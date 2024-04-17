@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_65be6d2d-d99a-4908-8c2c-396f9aaa565a
+    types: pipeline_6ca1832f-31ae-4eee-bd1e-fc29b04f98da
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -157,17 +157,9 @@ jobs:
               echo "Setting Amplify Hosting Region"
               aws configure set amplify.hostingRegion ${{ env.region }}
 
-              echo "Checking if the Amplify App already exists"
-              app_info=$(aws amplify get-app --app-name ${{ env.APPLICATION_NAME }})
-              
-              if [ $? -eq 0 ]; then
-                  echo "Amplify App already exists."
-                  app_id=$(echo $app_info | jq -r '.app.appId')
-              else
-                  echo "Initializing the Amplify App"
-                  create_app=$(aws amplify create-app --name ${{ env.APPLICATION_NAME }})
-                  app_id=$(echo $create_app | jq -r '.app.appId')
-              fi
+              echo "Initializing the Amplify App"
+              create_app=$(aws amplify create-app --name ${{ env.APPLICATION_NAME }})
+              app_id=$(echo $create_app | jq -r '.app.appId')
               
               echo "App ID: $app_id"
               echo "appId=$app_id" >> $GITHUB_OUTPUT
