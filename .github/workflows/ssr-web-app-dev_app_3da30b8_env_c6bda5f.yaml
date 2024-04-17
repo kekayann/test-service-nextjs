@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_1bc8023d-fa10-49fd-a17c-fe1f4225a707
+    types: pipeline_65be6d2d-d99a-4908-8c2c-396f9aaa565a
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -158,7 +158,7 @@ jobs:
               aws configure set amplify.hostingRegion ${{ env.region }}
 
               echo "Checking if the Amplify App already exists"
-              app_info=$(aws amplify get-app --app-name ${{ env.APPLICATION_NAME }} 2>/dev/null)
+              app_info=$(aws amplify get-app --app-name ${{ env.APPLICATION_NAME }})
               
               if [ $? -eq 0 ]; then
                   echo "Amplify App already exists."
