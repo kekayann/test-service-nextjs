@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_c5afd5c3-e382-4ef2-b730-37a2cfc56976
+    types: pipeline_1bc8023d-fa10-49fd-a17c-fe1f4225a707
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -151,23 +151,37 @@ jobs:
       - name: 'Run :: Build App'
         run: ${{ env.APP_BUILD_COMMAND }} && ls
       - name: 'Run :: Initialize AWS Amplify'
+        id: initialize-amplify
         run: |2-
 
               echo "Setting Amplify Hosting Region"
               aws configure set amplify.hostingRegion ${{ env.region }}
 
-              echo "Initializing the Amplify App"
-              create_app=$(aws amplify create-app --name ${{ env.APPLICATION_NAME }})
-              app_id=$(echo $create_app | jq -r '.app.appId')
+              echo "Checking if the Amplify App already exists"
+              app_info=$(aws amplify get-app --app-name ${{ env.APPLICATION_NAME }} 2>/dev/null)
+              
+              if [ $? -eq 0 ]; then
+                  echo "Amplify App already exists."
+                  app_id=$(echo $app_info | jq -r '.app.appId')
+              else
+                  echo "Initializing the Amplify App"
+                  create_app=$(aws amplify create-app --name ${{ env.APPLICATION_NAME }})
+                  app_id=$(echo $create_app | jq -r '.app.appId')
+              fi
+              
+              echo "App ID: $app_id"
+              echo "appId=$app_id" >> $GITHUB_OUTPUT
               
       - name: 'Run :: Publish to AWS Amplify'
         run: |2-
 
-              echo "Creating Deployment"
-              deployment=$(aws amplify create-deployment --branch-name master --app ${{ env.APPLICATION_NAME }} --name ${{ env.COMMIT_ID }} --buildSpec '{ "version": 1, "frontend": { "artifacts": { "baseDirectory": "${{ env.APP_BUILD_FOLDER }}" } } }')
-              
+              appId=${{ steps.initialize-amplify.outputs.appId }}
+              echo "Creating Deployment for $appId"
+              deployment=$(aws amplify create-deployment --app $appId --name ${{ env.COMMIT_ID }} --buildSpec '{ "version": 1, "frontend": { "artifacts": { "baseDirectory": "${{ env.APP_BUILD_FOLDER }}" } } }')
+
+              deployment_id=$(echo $deployment | jq -r '.deployment.deploymentId')
               echo "Start Deployment"
-              aws amplify start-deployment --app ${{ env.APPLICATION_NAME }} --deploymentId 124
+              aws amplify start-deployment --app $appId --deploymentId $deployment_id
               
   _status-success:
     name: _status Success
