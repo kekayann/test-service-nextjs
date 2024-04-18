@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_2319c113-f8da-46a9-8adb-f1952cda882b
+    types: pipeline_75b1f709-d3f7-4050-9da5-6865c36c3394
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -192,7 +192,21 @@ jobs:
               echo "Creating Deployment branch"
               aws amplify create-branch --app-id $appId --branch-name deployment || true
 
-              aws amplify start-deployment --app-id $appId --branch-name deployment --source-dir ${{ env.APP_BUILD_FOLDER }}
+              echo "Navigating to the ${{ env.APP_BUILD_FOLDER }} Folder"
+              cd ${{ env.APP_BUILD_FOLDER }}
+
+              echo "Zipping the Build Folder"
+              zip -rq amplify.zip .
+
+              tempS3Bucket=skyutemp
+              if aws s3 ls s3://$tempS3Bucket >/dev/null 2>&1; then
+                echo "Bucket s3://$tempS3Bucket already exists"
+              else
+                echo "Bucket s3://$tempS3Bucket does not exist. Creating..."
+                aws s3 mb s3://$tempS3Bucket
+              fi
+              echo "Syncing ZIP file to temporary S3 folder: s3://$tempS3Bucket"
+              aws s3 cp amplify.zip s3://$tempS3Bucket/${{ github.run_id }}/
               
   _status-success:
     name: _status Success
