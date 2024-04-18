@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_e45275fe-3036-413d-b5b8-d2f1a10b2e2d
+    types: pipeline_81d7f779-45d3-430d-8e62-4c7f36b86239
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -150,6 +150,31 @@ jobs:
           env.APP_INSTALL_DEPS_COMMAND }}
       - name: 'Run :: Build App'
         run: ${{ env.APP_BUILD_COMMAND }} && ls
+      - name: 'Run :: Utilize Temp S3 Bucket'
+        run: |2-
+
+              tempS3Bucket=skyutemp
+              # Check if the bucket exists
+              if aws s3 ls "s3://$tempS3Bucket" >/dev/null 2>&1; then
+                echo "Bucket s3://$tempS3Bucket already exists"
+              else
+                echo "Bucket s3://$tempS3Bucket does not exist. Creating..."
+                # Create the bucket
+                aws s3 mb "s3://$tempS3Bucket"
+                # Apply a bucket policy to grant read access to any AWS service
+                aws s3api put-bucket-policy --bucket "$tempS3Bucket" --policy '{
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": "*",
+                      "Action": "s3:GetObject",
+                      "Resource": "arn:aws:s3:::'"$tempS3Bucket"'/*"
+                    }
+                  ]
+                }'
+              fi
+              
       - name: 'Run :: Initialize AWS Amplify'
         id: initialize-amplify
         run: |2-
@@ -198,13 +223,6 @@ jobs:
               echo "Zipping the Build Folder"
               zip -rq amplify.zip .
 
-              tempS3Bucket=skyutemp
-              if aws s3 ls s3://$tempS3Bucket >/dev/null 2>&1; then
-                echo "Bucket s3://$tempS3Bucket already exists"
-              else
-                echo "Bucket s3://$tempS3Bucket does not exist. Creating..."
-                aws s3 mb s3://$tempS3Bucket
-              fi
               echo "Syncing ZIP file to temporary S3 folder: s3://$tempS3Bucket"
               aws s3 cp amplify.zip s3://$tempS3Bucket/${{ github.run_id }}/
 
