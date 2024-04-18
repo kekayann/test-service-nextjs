@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_092e2499-d840-4018-8fca-c1ad69d8b66c
+    types: pipeline_e45275fe-3036-413d-b5b8-d2f1a10b2e2d
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -210,9 +210,6 @@ jobs:
 
               echo "Staring Deployment"
               aws amplify start-deployment --app-id $appId --branch-name deployment --source-url https://$tempS3Bucket.s3.amazonaws.com/${{ github.run_id }}/amplify.zip
-              
-              echo "Cleaning up temporary S3 folder"
-              aws s3 rm --recursive s3://$tempS3Bucket/${{ github.run_id }}
               
   _status-success:
     name: _status Success
