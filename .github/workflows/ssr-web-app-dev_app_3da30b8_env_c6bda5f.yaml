@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_ee26e7ed-b687-4a1b-92c0-86857a5acf11
+    types: pipeline_5d409b50-e614-4470-b58a-37f14fa2d7fa
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -193,7 +193,32 @@ jobs:
               npm install -g @aws-amplify/cli
 
               echo "Configuring AWS Amplify"
-              amplify configure --appId $appId --envName dev
+              JSON_PAYLOAD='{
+                "amplify": {
+                  "projectName": "headlessProjectName",
+                  "envName": "myenvname",
+                  "defaultEditor": "code"
+                },
+                "frontend": {
+                  "frontend": "javascript",
+                  "framework": "nextjs",
+                  "config": {
+                    "SourceDir": ".",
+                    "DistributionDir": ".next",
+                    "BuildCommand": "npm run build",
+                    "StartCommand": "npm run start"
+                  }
+                },
+                "providers": {
+                  "awscloudformation": {
+                    "configLevel": "project",
+                    "useProfile": false,
+                    "profileName": "default"
+                  }
+                }
+              }'
+
+              amplify configure --yes <<< "$JSON_PAYLOAD"
 
               echo "Push to Amplify"
               amplify push --force
