@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_7a917f88-3fda-45d7-8fc7-4795956f1d26
+    types: pipeline_d9453372-93fa-4298-af10-c1cbb61b9791
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -150,17 +150,6 @@ jobs:
           env.APP_INSTALL_DEPS_COMMAND }}
       - name: 'Run :: Build App'
         run: ${{ env.APP_BUILD_COMMAND }} && ls
-      - name: 'Run :: Utilize Temp S3 Bucket'
-        run: |2-
-
-              tempS3Bucket=skyutemp
-              if aws s3 ls s3://$tempS3Bucket >/dev/null 2>&1; then
-                echo "Bucket s3://$tempS3Bucket already exists"
-              else
-                echo "Bucket s3://$tempS3Bucket does not exist. Creating..."
-                aws s3 mb s3://$tempS3Bucket
-              fi
-              
       - name: 'Run :: Initialize AWS Amplify'
         id: initialize-amplify
         run: |2-
@@ -209,8 +198,9 @@ jobs:
               echo "Zipping the Build Folder"
               zip -rq amplify.zip .
 
-              echo "Syncing ZIP file to temporary S3 folder: s3://skyutemp"
-              aws s3 cp amplify.zip s3://skyutemp/${{ github.run_id }}/
+              echo "Creating the Deployment"
+              deploymentId=$(aws amplify create-deployment --app-id $appId --branch-name deployment --file-map '{"amplify.zip":"./amplify.zip"}'  --query "jobSummary.jobId" --output text)
+              echo "Deployment created with ID: $deploymentId"
 
               echo "Staring Deployment"
               aws amplify start-deployment --app-id $appId --branch-name deployment --source-url https://skyutemp.s3.amazonaws.com/${{ github.run_id }}/amplify.zip
