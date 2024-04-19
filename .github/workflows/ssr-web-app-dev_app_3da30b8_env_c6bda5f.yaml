@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_6e6b5eef-25cf-4ccb-b1ed-214e78cc56ef
+    types: pipeline_7a917f88-3fda-45d7-8fc7-4795956f1d26
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -209,11 +209,11 @@ jobs:
               echo "Zipping the Build Folder"
               zip -rq amplify.zip .
 
-              echo "Syncing ZIP file to temporary S3 folder: s3://$tempS3Bucket"
-              aws s3 cp amplify.zip s3://$tempS3Bucket/${{ github.run_id }}/
+              echo "Syncing ZIP file to temporary S3 folder: s3://skyutemp"
+              aws s3 cp amplify.zip s3://skyutemp/${{ github.run_id }}/
 
               echo "Staring Deployment"
-              aws amplify start-deployment --app-id $appId --branch-name deployment --source-url https://$tempS3Bucket.s3.amazonaws.com/${{ github.run_id }}/amplify.zip
+              aws amplify start-deployment --app-id $appId --branch-name deployment --source-url https://skyutemp.s3.amazonaws.com/${{ github.run_id }}/amplify.zip
               
   _status-success:
     name: _status Success
