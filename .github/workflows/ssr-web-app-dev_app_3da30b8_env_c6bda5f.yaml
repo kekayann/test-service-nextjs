@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_6b339225-3aed-4a81-a7fb-abc4675a9251
+    types: pipeline_0dea78d6-07a7-40ba-b7a8-b13cd5b96f35
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -199,8 +199,11 @@ jobs:
               zip -rq amplify.zip .
 
               echo "Creating the Deployment"
-              deploymentId=$(aws amplify create-deployment --app-id $appId --branch-name deployment --file-map '{"amplify.zip":"amplify.zip"}'  --query "jobId" --output text)
+              deployment=$(aws amplify create-deployment --app-id $appId --branch-name deployment)
+              deploymentId=$(echo $deployment | jq -r '.jobId')
+              uploadUrl=$(echo $deployment | jq -r '.zipUploadUrl ')
               echo "Deployment created with ID: $deploymentId"
+              echo "Zip Upload URL: $uploadUrl"
 
               echo "Staring Deployment"
               aws amplify start-deployment --app-id $appId --branch-name deployment --job-id $deploymentId
