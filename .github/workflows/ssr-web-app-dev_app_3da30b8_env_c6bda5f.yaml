@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_ff6a3e0e-4e37-4a0d-aef4-589004dcd6c7
+    types: pipeline_ee26e7ed-b687-4a1b-92c0-86857a5acf11
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -189,27 +189,14 @@ jobs:
 
               appId=${{ steps.initialize-amplify.outputs.appId }}
 
-              echo "Creating Deployment branch"
-              aws amplify create-branch --app-id $appId --branch-name deployment || true
+              echo "Installing the Amplify CLI"
+              npm install -g @aws-amplify/cli
 
-              echo "Navigating to the ${{ env.APP_BUILD_FOLDER }} Folder"
-              cd ${{ env.APP_BUILD_FOLDER }}
+              echo "Configuring AWS Amplify"
+              amplify configure --appId $appId --envName dev
 
-              echo "Zipping the Build Folder"
-              zip -rq amplify.zip .
-
-              echo "Creating the Deployment"
-              deployment=$(aws amplify create-deployment --app-id $appId --branch-name deployment)
-              deploymentId=$(echo $deployment | jq -r '.jobId')
-              uploadUrl=$(echo $deployment | jq -r '.zipUploadUrl ')
-              echo "Deployment created with ID: $deploymentId"
-              echo "Zip Upload URL: $uploadUrl"
-
-              echo "Uploading zip file"
-              curl -X PUT -T amplify.zip $uploadUrl
-
-              echo "Staring Deployment"
-              aws amplify start-deployment --app-id $appId --branch-name deployment --job-id $deploymentId
+              echo "Push to Amplify"
+              amplify push --force
               
   _status-success:
     name: _status Success
