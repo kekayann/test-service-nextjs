@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_a2325852-2034-4b12-bf13-2e7a21698edc
+    types: pipeline_ff6a3e0e-4e37-4a0d-aef4-589004dcd6c7
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -20,7 +20,6 @@ jobs:
     steps:
       - name: 'Run :: Decoding Secrets'
         run: |2-
-
                 if [ ! -x "$(command -v jq)" ]; then
                   echo "jq not found, installing..."
                   sudo apt-get update
@@ -35,7 +34,6 @@ jobs:
     steps:
       - name: 'Run :: Decoding Secrets'
         run: |2-
-
                 if [ ! -x "$(command -v jq)" ]; then
                   echo "jq not found, installing..."
                   sudo apt-get update
@@ -45,7 +43,6 @@ jobs:
                 
       - name: Pipeline Started
         run: |2-
-
               context=$(echo '${{ toJson(github) }}' | jq 'del(.token)')
               response=$(curl -X PUT -d "runId=${{ github.run_id }}&context=$context"  -H 'Authorization: ${{ env.SERVICE_ACC_ACCESS_TOKEN }}' -H 'x-organization-id: ${{ env.PIPELINE_ORGANIZATION_ID }}' -H 'x-project-id: ${{ env.PIPELINE_PROJECT_ID }}' -H 'x-environment-id: ${{ env.PIPELINE_ENVIRONMENT_ID }}' -H 'x-trace-id: ${{ env.PIPELINE_TRACE_ID }}' -H 'x-auth-by: sa' -H 'Content-Type: application/x-www-form-urlencoded'  '${{ env.PIPELINE_SERVICE_EP }}/${{ env.PIPELINE_ID }}/PENDING')
               if echo "$response" | grep -q '"success":true'; then
@@ -62,7 +59,6 @@ jobs:
     steps:
       - name: 'Run :: Decoding Secrets'
         run: |2-
-
                 if [ ! -x "$(command -v jq)" ]; then
                   echo "jq not found, installing..."
                   sudo apt-get update
@@ -72,7 +68,6 @@ jobs:
                 
       - name: Pipeline Release
         run: |2-
-
               echo "Pipeline Release Information"
               echo "////////////////////////////"
               echo "releaseId         : ${{ github.event.client_payload.releaseData.releaseId }}"
@@ -109,7 +104,6 @@ jobs:
     steps:
       - name: Start
         run: |2-
-
               echo " Starting GitHub Action!" && 
               echo "STEPS_CAN_PROCEED=true" >> $GITHUB_ENV
               
@@ -120,13 +114,11 @@ jobs:
       - name: 'Run :: Checkout Specific Commit'
         if: ${{ github.event.client_payload.commitId != null }}
         run: |2-
-
               git fetch --all
               git checkout ${{ github.event.client_payload.commitId }} || true
               
       - name: 'Run :: Decoding Secrets'
         run: |2-
-
                 if [ ! -x "$(command -v jq)" ]; then
                   echo "jq not found, installing..."
                   sudo apt-get update
@@ -153,10 +145,8 @@ jobs:
       - name: 'Run :: Initialize AWS Amplify'
         id: initialize-amplify
         run: |2-
-
               echo "Setting Amplify Hosting Region"
               aws configure set amplify.hostingRegion ${{ env.region }}
-
               echo "Fetching Amplify Apps"
               app_id=""
               next_token=""
@@ -172,7 +162,6 @@ jobs:
                     break
                 fi
               done
-
               if [ -n "$app_id" ]; then
                 echo "Amplify App already exists."
               else
@@ -186,45 +175,23 @@ jobs:
               
       - name: 'Run :: Publish to AWS Amplify'
         run: |2-
-
               appId=${{ steps.initialize-amplify.outputs.appId }}
-
-              echo "Installing the Amplify CLI"
-              npm install -g @aws-amplify/cli
-
-              echo "Pulling Amplify Project"
-              amplify pull $appId
-              
-              echo "Configuring AWS Amplify"
-              JSON_PAYLOAD='{
-                "amplify": {
-                  "projectName": "headlessProjectName",
-                  "envName": "myenvname",
-                  "defaultEditor": "code"
-                },
-                "frontend": {
-                  "frontend": "javascript",
-                  "framework": "nextjs",
-                  "config": {
-                    "SourceDir": ".",
-                    "DistributionDir": ".next",
-                    "BuildCommand": "npm run build",
-                    "StartCommand": "npm run start"
-                  }
-                },
-                "providers": {
-                  "awscloudformation": {
-                    "configLevel": "project",
-                    "useProfile": false,
-                    "profileName": "default"
-                  }
-                }
-              }'
-
-              amplify configure --yes <<< "$JSON_PAYLOAD"
-
-              echo "Push to Amplify"
-              amplify push --force
+              echo "Creating Deployment branch"
+              aws amplify create-branch --app-id $appId --branch-name deployment || true
+              echo "Navigating to the ${{ env.APP_BUILD_FOLDER }} Folder"
+              cd ${{ env.APP_BUILD_FOLDER }}
+              echo "Zipping the Build Folder"
+              zip -rq amplify.zip .
+              echo "Creating the Deployment"
+              deployment=$(aws amplify create-deployment --app-id $appId --branch-name deployment)
+              deploymentId=$(echo $deployment | jq -r '.jobId')
+              uploadUrl=$(echo $deployment | jq -r '.zipUploadUrl ')
+              echo "Deployment created with ID: $deploymentId"
+              echo "Zip Upload URL: $uploadUrl"
+              echo "Uploading zip file"
+              curl -X PUT -T amplify.zip $uploadUrl
+              echo "Staring Deployment"
+              aws amplify start-deployment --app-id $appId --branch-name deployment --job-id $deploymentId
               
   _status-success:
     name: _status Success
@@ -236,7 +203,6 @@ jobs:
     steps:
       - name: 'Run :: Decoding Secrets'
         run: |2-
-
                 if [ ! -x "$(command -v jq)" ]; then
                   echo "jq not found, installing..."
                   sudo apt-get update
@@ -246,7 +212,6 @@ jobs:
                 
       - name: Pipeline Success
         run: |2-
-
               context=$(echo '${{ toJson(github) }}' | jq 'del(.token)')
               response=$(curl -X PUT -d "runId=${{ github.run_id }}&context=$context"  -H 'Authorization: ${{ env.SERVICE_ACC_ACCESS_TOKEN }}' -H 'x-organization-id: ${{ env.PIPELINE_ORGANIZATION_ID }}' -H 'x-project-id: ${{ env.PIPELINE_PROJECT_ID }}' -H 'x-environment-id: ${{ env.PIPELINE_ENVIRONMENT_ID }}' -H 'x-trace-id: ${{ env.PIPELINE_TRACE_ID }}' -H 'x-auth-by: sa' -H 'Content-Type: application/x-www-form-urlencoded'  '${{ env.PIPELINE_SERVICE_EP }}/${{ env.PIPELINE_ID }}/SUCCESS')
               
@@ -260,7 +225,6 @@ jobs:
     steps:
       - name: 'Run :: Decoding Secrets'
         run: |2-
-
                 if [ ! -x "$(command -v jq)" ]; then
                   echo "jq not found, installing..."
                   sudo apt-get update
@@ -270,7 +234,6 @@ jobs:
                 
       - name: Pipeline Failed
         run: |2-
-
               context=$(echo '${{ toJson(github) }}' | jq 'del(.token)')
               response=$(curl -X PUT -d "runId=${{ github.run_id }}&context=$context"  -H 'Authorization: ${{ env.SERVICE_ACC_ACCESS_TOKEN }}' -H 'x-organization-id: ${{ env.PIPELINE_ORGANIZATION_ID }}' -H 'x-project-id: ${{ env.PIPELINE_PROJECT_ID }}' -H 'x-environment-id: ${{ env.PIPELINE_ENVIRONMENT_ID }}' -H 'x-trace-id: ${{ env.PIPELINE_TRACE_ID }}' -H 'x-auth-by: sa' -H 'Content-Type: application/x-www-form-urlencoded'  '${{ env.PIPELINE_SERVICE_EP }}/${{ env.PIPELINE_ID }}/FAILED')
               
@@ -284,7 +247,6 @@ jobs:
     steps:
       - name: 'Run :: Decoding Secrets'
         run: |2-
-
                 if [ ! -x "$(command -v jq)" ]; then
                   echo "jq not found, installing..."
                   sudo apt-get update
@@ -298,7 +260,6 @@ jobs:
               response=$(curl -X PATCH -d "imageRegistryURL=${{ env.IMAGE_NAME }}&appVersionId=${{ env.DEPLOYMENT_APP_VERSION_ID }}&tag=${{ env.COMMIT_ID }}&containerName=${{ env.DEPLOYMENT_CONTAINER_NAME }}&shouldDeploy=${{env.DEPLOY_STEP_SHOULD_DEPLOY}}&pipelineRunId=${{ github.run_id }}&commitDetails[commitHash]=${{ github.sha }}&commitDetails[commitAvatar]=https://github.com/${{ github.event.head_commit.author.name }}.png&commitDetails[commitTime]=${{ github.event.head_commit.timestamp }}&commitDetails[commitMessage]=${{ github.event.head_commit.message || github.event.client_payload.commitMessage }}&commitDetails[commitUser]=${{ github.event.head_commit.author.name }}"  -H 'Authorization: ${{ env.SERVICE_ACC_ACCESS_TOKEN }}' -H 'x-organization-id: ${{ env.PIPELINE_ORGANIZATION_ID }}' -H 'x-project-id: ${{ env.PIPELINE_PROJECT_ID }}' -H 'x-environment-id: ${{ env.PIPELINE_ENVIRONMENT_ID }}' -H 'x-application-id: ${{ env.PIPELINE_APPLICATION_ID }}' -H 'x-trace-id: ${{ env.PIPELINE_TRACE_ID }}' -H 'x-resource-id: ${{ env.PIPELINE_APPLICATION_ID }}' -H 'x-auth-by: sa' -H 'Content-Type: application/x-www-form-urlencoded'  '${{ env.DEPLOYMENT_ENDPOINT }}')
               
               status_code=$?
-
               if [ $status_code -eq 0 ]; then
                 if echo "$response" | grep -q '"success":true'; then
                   echo "SUCCESS :: $response"
@@ -310,4 +271,3 @@ jobs:
                 echo "Failed to deploy. HTTP status code: $status_code"
                 exit 1
               fi
-            
