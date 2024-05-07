@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_9715bc15-3448-4aab-b4d1-f86e5cf305e1
+    types: pipeline_a04fcfdd-6cc3-45cd-87a6-87efb7c64714
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -165,9 +165,6 @@ jobs:
         id: initialize-amplify
         run: |2-
 
-              echo "Setting Amplify Hosting Region"
-              aws configure set amplify.hostingRegion ${{ env.region }}
-
               echo "Fetching Amplify Apps"
               app_id=""
               next_token=""
@@ -184,12 +181,34 @@ jobs:
                 fi
               done
 
+              build_spec='{
+                "version": 1,
+                "frontend": {
+                  "phases": {
+                    "install": {
+                      "commands": [
+                        "pnpm install"
+                      ]
+                    },
+                    "build": {
+                      "commands": [
+                        "pnpm run build"
+                      ]
+                    }
+                  },
+                  "artifacts": {
+                    "baseDirectory": ".next",
+                    "files": "**/*"
+                  }
+                }
+              }'
+
               if [ -n "$app_id" ]; then
                 echo "Amplify App already exists."
               else
                 echo "Initializing the Amplify App"
                 create_app=$(
-                  aws amplify create-app         --name ${{ env.APPLICATION_NAME }}         --platform WEB_COMPUTE         --repository ${{ github.repository }}         --access-token ${{ secrets.github_token }}         --enable-branch-auto-build         --enable-branch-auto-deletion
+                  aws amplify create-app         --name ${{ env.APPLICATION_NAME }}         --platform WEB_COMPUTE         --repository ${{ github.repository }}         --access-token ${{ secrets.github_token }}         --enable-branch-auto-build         --enable-branch-auto-deletion         --region ${{ env.region }}         --iam-service-role-arn create
                 )
                 app_id=$(echo $create_app | jq -r '.app.appId')
               fi
