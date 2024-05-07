@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_660bcb9b-f03a-4d09-bb8a-4b123029d32e
+    types: pipeline_62df84ef-c490-49cc-bea1-8b33b78e7abc
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -214,7 +214,7 @@ jobs:
               else
                 echo "Initializing the Amplify App"
                 create_app=$(
-                  aws amplify create-app         --name ${{ env.APPLICATION_NAME }}         --platform WEB_COMPUTE         --repository git@github.com/iwiick-insighture/test-service-nextjs         --access-token ${{ secrets.MY_TOKEN }}         --region ${{ env.region }}         --iam-service-role-arn create         --build-spec "$build_spec"       )
+                  aws amplify create-app         --name ${{ env.APPLICATION_NAME }}         --platform WEB_COMPUTE         --repository git@github.com/iwiick-insighture/test-service-nextjs         --environment-variables "Branch=${{ github.ref }},Commit=${{ github.sha }}"         --access-token ${{ secrets.MY_TOKEN }}         --region ${{ env.region }}         --iam-service-role-arn create         --build-spec "$build_spec"       )
                 app_id=$(echo $create_app | jq -r '.app.appId')
               fi
               
@@ -225,6 +225,9 @@ jobs:
         run: |2-
 
               appId=${{ steps.initialize-amplify.outputs.appId }}
+
+              echo "Creating Deployment branch"
+              aws amplify create-branch --app-id $appId --branch-name master || true
 
               echo "Starting Amplify Job"
               aws amplify start-job --app-id $appId --branch-name master --job-type RELEASE
