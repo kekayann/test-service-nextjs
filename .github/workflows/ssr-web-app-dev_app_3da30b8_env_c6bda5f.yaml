@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_23a018ef-04c0-4175-9841-8cc0b5defb1b
+    types: pipeline_0994aae2-57b1-43c8-b252-a9fa39291983
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -229,8 +229,13 @@ jobs:
               echo "Creating Deployment branch"
               aws amplify create-branch --app-id $appId --branch-name deployment || true
 
+              echo "Creating the Deployment"
+              deployment=$(aws amplify create-deployment --app-id $appId --branch-name deployment)
+              deploymentId=$(echo $deployment | jq -r '.jobId')
+              echo "Deployment created with ID: $deploymentId"
+
               echo "Starting Amplify Job"
-              aws amplify start-job --app-id $appId --branch-name deployment --job-type RELEASE
+              aws amplify start-job --app-id $appId --branch-name deployment --job-type RELEASE --job-id $deploymentId
               
   _status-success:
     name: _status Success
