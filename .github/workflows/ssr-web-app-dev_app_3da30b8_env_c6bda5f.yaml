@@ -7,7 +7,7 @@ name: ssr-web-app-dev_app_3da30b8_env_c6bda5f Pipeline (Skyu Generated)
       - v*
   workflow_dispatch: {}
   repository_dispatch:
-    types: pipeline_a04fcfdd-6cc3-45cd-87a6-87efb7c64714
+    types: pipeline_9903c056-712c-4035-8060-1432e9497e21
 env:
   ENCODED_PIPELINE_SECRET: ${{secrets.TESTSERVICENEXTJS_SSRWEBAPPDEV_APP_3DA30B8_ENV_C6BDA5F}}
   COMMIT_ID: ${{github.event.client_payload.commitId || github.sha || github.run_id}}
@@ -208,7 +208,7 @@ jobs:
               else
                 echo "Initializing the Amplify App"
                 create_app=$(
-                  aws amplify create-app         --name ${{ env.APPLICATION_NAME }}         --platform WEB_COMPUTE         --repository ${{ github.repository }}         --access-token ${{ secrets.github_token }}         --enable-branch-auto-build         --enable-branch-auto-deletion         --region ${{ env.region }}         --iam-service-role-arn create
+                  aws amplify create-app         --name ${{ env.APPLICATION_NAME }}         --platform WEB_COMPUTE         --repository ${{ github.repository }}         --access-token ${{ secrets.github_token }}         --enable-branch-auto-build         --enable-branch-auto-deletion         --region us-east-1         --iam-service-role-arn create
                 )
                 app_id=$(echo $create_app | jq -r '.app.appId')
               fi
